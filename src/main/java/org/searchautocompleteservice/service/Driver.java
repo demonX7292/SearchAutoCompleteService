@@ -105,7 +105,7 @@ public class Driver {
             List<String> topKSearches = trie.getTopKSearches(prefix);
             if (topKSearches.isEmpty()) {
                 return SearchAutocompleteResponse.builder()
-                        .status(HttpStatus.NO_CONTENT)
+                        .status(HttpStatus.OK)
                         .message(FAILURE_RESPONSE_MESSAGE)
                         .error(true)
                         .topKSearchedWords(topKSearches)

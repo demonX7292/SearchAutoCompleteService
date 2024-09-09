@@ -1,7 +1,7 @@
 package org.searchautocompleteservice.config;
 
 public class Constant {
-    public static final int TOP_K = 3;
+    public static final int TOP_K = 5;
     public static final int PREFIX_LENGTH = 50;
     public static final String SUCCESS_RESPONSE_MESSAGE = "Top " + TOP_K + " searched words are : ";
     public static final String FAILURE_RESPONSE_MESSAGE = "Not Available";
