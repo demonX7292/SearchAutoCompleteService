@@ -13,6 +13,8 @@ import static org.searchautocompleteservice.config.Constant.PREFIX_LENGTH;
 
 public class RequestValidator {
 
+    private RequestValidator(){}
+
     public static List<NewWordRequest> filterRequests(List<NewWordRequest> requests) throws InvalidRequestException {
         List <NewWordRequest> filteredRequests = requests.stream()
                 .filter(request -> (request.getWord().length() < PREFIX_LENGTH

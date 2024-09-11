@@ -1,7 +1,10 @@
 package org.searchautocompleteservice.service;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.searchautocompleteservice.components.Node;
 import org.searchautocompleteservice.components.Trie;
-import org.searchautocompleteservice.config.Configuration;
+import org.searchautocompleteservice.config.TrieConfig;
 import org.searchautocompleteservice.exceptions.InvalidRequestException;
 import org.searchautocompleteservice.exceptions.SearchAutoCompleteServiceException;
 import org.searchautocompleteservice.model.NewWordRequest;
@@ -12,8 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
@@ -23,14 +25,52 @@ import static org.searchautocompleteservice.config.Constant.*;
 @RestController
 public class Driver {
 
-    private final Trie trie;
-    private final Configuration configuration;
-
     @Autowired
-    public Driver() {
-        configuration = new Configuration(TOP_K);
-        trie = new Trie(configuration);
-        initializeTrie(trie);
+    private Trie trie;
+    @Autowired
+    private TrieConfig trieConfig;
+    @Autowired
+    private S3FileService s3FileService;
+
+    @PreDestroy
+    public void destroy() {
+        List<Node> allWords = trie.getAllWords();
+        try {
+            s3FileService.deleteFile(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+            File file = new File(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+            FileWriter myWriter = new FileWriter(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+            myWriter.write("");
+            for (Node node : allWords) {
+                myWriter.write(node.getCurrentWord() + " " + node.getFrequency() + "\n");
+            }
+            myWriter.close();
+            System.out.println(s3FileService.saveFile(file));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @PostConstruct
+    private void initializeTrie() {
+        byte[] inputStream = s3FileService.downloadFile(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+
+        try {
+            File file = new File(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+            FileOutputStream fos = new FileOutputStream(SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE);
+            fos.write(inputStream);
+            fos.close();
+            Scanner myReader = new Scanner(file);
+            while (myReader.hasNextLine()) {
+                String[] data = myReader.nextLine().split(" ");
+                String word = data[0];
+                int frequency = Integer.parseInt(data[1]);
+                trie.insert(word, frequency);
+            }
+            myReader.close();
+        } catch (Exception e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
     @RequestMapping("/search")
@@ -80,23 +120,6 @@ public class Driver {
                 .message("words successfully inserted into trie")
                 .topKSearchedWords(null)
                 .build(), HttpStatus.OK);
-    }
-
-    private void initializeTrie(Trie trie) {
-        try {
-            File myObj = new File("C:\\Users\\Karan\\Desktop\\searchAutoCompleteInput.txt");
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                String[] data = myReader.nextLine().split(" ");
-                String word = data[0];
-                int frequency = Integer.parseInt(data[1]);
-                trie.insert(word, frequency);
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
     }
 
     private SearchAutocompleteResponse buildSearchAutocompleteResponse(String prefix) {

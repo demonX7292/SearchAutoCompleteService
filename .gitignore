@@ -12,6 +12,8 @@ target/
 *.iws
 *.iml
 *.ipr
+src/main/resources/application.properties
+trie_input_dataset_v0.txt
 
 ### Eclipse ###
 .apt_generated

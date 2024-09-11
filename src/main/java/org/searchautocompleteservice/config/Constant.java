@@ -13,4 +13,6 @@ public class Constant {
                     "and the frequency should be above 0 for a word";
     public static final String INVALID_SEARCH_FOR_TRIE_EXCEPTION =
             "invalid character present in the prefix";
+    public static final String SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE =
+            "trie_input_dataset_v0.txt";
 }

@@ -1,23 +1,27 @@
 package org.searchautocompleteservice.components;
 
+import org.searchautocompleteservice.config.TrieConfig;
+import org.springframework.stereotype.Service;
 
-import org.searchautocompleteservice.config.Configuration;
-
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+
 import static org.searchautocompleteservice.config.Constant.PREFIX_LENGTH;
 
+@Service
 public class Trie {
 
     private final Node root;
-    private final Configuration configuration;
+    private final TrieConfig trieConfig;
 
-    public Trie(Configuration configuration) {
-        root = new Node(configuration, "");
-        this.configuration = configuration;
+    public Trie(TrieConfig trieConfig) {
+        root = new Node(trieConfig, "");
+        this.trieConfig = trieConfig;
     }
 
-    public void insert(String word, int frequency) {
+    public synchronized void insert(String word, int frequency) {
         if (word.length() > PREFIX_LENGTH) {
             return;
         }
@@ -30,7 +34,7 @@ public class Trie {
             int x = c - 'a';
             formedWord = formedWord + c;
             if (current.getChild()[x] == null) {
-                current.getChild()[x] = new Node(configuration, formedWord);
+                current.getChild()[x] = new Node(trieConfig, formedWord);
             }
             current = current.getChild()[x];
             nodesToBeUpdated.add(current);
@@ -72,7 +76,7 @@ public class Trie {
         return true;
     }
 
-    public List<String> getTopKSearches(String prefix) {
+    public synchronized List<String> getTopKSearches(String prefix) {
         prefix = prefix.toLowerCase();
         Node current = root;
         for (char c : prefix.toCharArray()) {
@@ -85,5 +89,23 @@ public class Trie {
         List <Node> topKNodes = new java.util.ArrayList<>(current.getTopKWords().stream().toList());
         topKNodes.sort((a, b) -> b.getFrequency() - a.getFrequency());
         return topKNodes.stream().map(Node::getCurrentWord).toList();
+    }
+
+    public List<Node> getAllWords() {
+        List<Node> result = new ArrayList<>();
+        Queue<Node> q = new LinkedList<>();
+        q.add(root);
+        while (!q.isEmpty()) {
+            Node node = q.poll();
+            if (node.getFrequency() > 0) {
+                result.add(node);
+            }
+            for (int i = 0; i < 26; i++) {
+                if (node.getChild()[i] != null) {
+                    q.add(node.getChild()[i]);
+                }
+            }
+        }
+        return result;
     }
 }

@@ -2,7 +2,7 @@ package org.searchautocompleteservice.components;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.searchautocompleteservice.config.Configuration;
+import org.searchautocompleteservice.config.TrieConfig;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -14,18 +14,18 @@ import java.util.Set;
 public class Node {
     private Node[] child; // 4 bytes * 26 (array size) = 104 bytes
     private int frequency; // 4 bytes
-    private final Configuration configuration; // 4 bytes
+    private final TrieConfig trieConfig; // 4 bytes
     private final String currentWord; // max 50 length -> 50 * 2 = 100 bytes
     private PriorityQueue<Node> topKWords;
     private Set<String> wordSet;// max k elements -> k(5) * 4 = 20 bytes
     // total = 104 + 4 + 4 + 100 + 20 = 234 ~ 300 bytes
 
-    public Node(Configuration configuration, String currentWord) {
+    public Node(TrieConfig trieConfig, String currentWord) {
         child = new Node[26];
         frequency = 0;
         wordSet = new HashSet<>();
-        topKWords = new PriorityQueue<>(configuration.topKSearches(), Comparator.comparingInt(a -> a.frequency));
-        this.configuration = configuration;
+        topKWords = new PriorityQueue<>(trieConfig.topKSearches(), Comparator.comparingInt(a -> a.frequency));
+        this.trieConfig = trieConfig;
         this.currentWord = currentWord;
     }
 
@@ -33,7 +33,7 @@ public class Node {
         if (wordSet.contains(node.getCurrentWord())) {
             return;
         }
-        if (topKWords.size() < configuration.topKSearches()) {
+        if (topKWords.size() < trieConfig.topKSearches()) {
             wordSet.add(node.getCurrentWord());
             topKWords.add(node);
             return;
