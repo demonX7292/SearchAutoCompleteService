@@ -90,8 +90,17 @@ JSON
 ```
 
 ## Configuration
-Create an S3 bucket from the AWS console and create a new user and attach to it the policy for accessing the S3 bucket
-Add the application.properties file in the resources directory and add the required credentials, bucket name and region needed to access the S3 bucket create
+1. Create an S3 bucket from the AWS console
+2. create a new user and attach to it the policy for accessing the S3 bucket
+3. Create an initial file with name specified in the Constant file in variable `SEARCH_AUTOCOMPLETE_SERVICE_DATASET_FILE`
+with the input dataset in the format :
+```dtd
+word1 20
+word2 30
+```
+4. Next upload this file to the bucket
+
+5. Add the application.properties file in the resources directory and add the required credentials, bucket name and region needed to access the S3 bucket create
 
 #### Example
 ```
