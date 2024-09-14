@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -85,27 +84,8 @@ public class Driver {
         return new ResponseEntity<>(response, response.getStatus());
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/search/newWord/{word}")
-    public ResponseEntity<SearchAutocompleteResponse> addBook(@PathVariable String word) {
-        NewWordRequest request = new NewWordRequest(word, 1);
-        try {
-            RequestValidator.filterRequests(Collections.singletonList(request));
-            trie.insert(request.getWord(), request.getFrequency());
-        } catch (InvalidRequestException e) {
-            return new ResponseEntity<>(SearchAutocompleteResponse.builder()
-                    .message(e.getMessage())
-                    .error(true)
-                    .topKSearchedWords(null)
-                    .build(), HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(SearchAutocompleteResponse.builder()
-                .message("words successfully inserted into trie")
-                .topKSearchedWords(null)
-                .build(), HttpStatus.OK);
-    }
-
     @RequestMapping(method = RequestMethod.POST, value = "/search/newWords")
-    public ResponseEntity<SearchAutocompleteResponse> addBooks(@RequestBody List<NewWordRequest> requests) {
+    public ResponseEntity<SearchAutocompleteResponse> addWords(@RequestBody List<NewWordRequest> requests) {
         try {
             List<NewWordRequest> filteredRequests = RequestValidator.filterRequests(requests);
             filteredRequests.forEach(request -> trie.insert(request.getWord(), request.getFrequency()));
